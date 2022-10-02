@@ -11,7 +11,7 @@ import argparse
 import os
 
 import torch
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, DiffusionPipeline
 
 # yes this is horrid
 KeyMap = {
@@ -704,13 +704,29 @@ KeyMap = {
 }
 
 
+class StableDiffusionPipelineStripped(DiffusionPipeline):
+    def __init__(self, unet=None, *args, **kwargs):
+        print("got unet", len(args), kwargs.keys())
+        self.unet = unet
+
+
 def convert_diff_to_sd(diffusers_model_path: str, base_ckpt_path: str, output_ckpt_path: str,
                        overwrite=False, huggingface_use_auth_token=None):
     if not overwrite and os.path.exists(output_ckpt_path):
         raise ValueError("output_ckpt_path exists already", output_ckpt_path)
 
     print(f"loading diff model from {diffusers_model_path!r}")
-    diff_pipe = StableDiffusionPipeline.from_pretrained(diffusers_model_path, use_auth_token=huggingface_use_auth_token)
+    try:
+        diff_pipe = StableDiffusionPipeline.from_pretrained(diffusers_model_path,
+                                                            use_auth_token=huggingface_use_auth_token)
+    except Exception as ex:
+        if "required positional arguments" in str(ex):
+            print("load error, trying loading stripped version", ex)
+            diff_pipe = StableDiffusionPipelineStripped.from_pretrained(diffusers_model_path,
+                                                                        use_auth_token=huggingface_use_auth_token)
+        else:
+            raise
+
     print("loading diff model done!")
 
     diff_pipe_unet_sd = diff_pipe.unet.state_dict()
