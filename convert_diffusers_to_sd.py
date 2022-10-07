@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# NOTE: use https://gist.github.com/jachiam/8a5c0b607e38fcc585168b90c686eb05
+# it's nicer
+
 # by ratwithashotgun, freely usable
 # converts from huggingface diffusers StableDiffusionPipeline models to original stablediffusion ckpt files.
 # this requires you to have the original model that was used to create the diff mode, for most dreambooth cases currently that's SD 1.4.
