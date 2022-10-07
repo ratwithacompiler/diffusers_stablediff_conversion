@@ -675,6 +675,7 @@ if __name__ == "__main__":
 
     unet = UNet2DConditionModel(**unet_config)
     unet.load_state_dict(converted_unet_checkpoint)
+    del converted_unet_checkpoint
 
     print("unet loaded dict")
 
@@ -686,6 +687,7 @@ if __name__ == "__main__":
 
     vae = AutoencoderKL(**vae_config)
     vae.load_state_dict(converted_vae_checkpoint)
+    del converted_vae_checkpoint
 
     print("vae loaded")
 
@@ -694,6 +696,7 @@ if __name__ == "__main__":
     if text_model_type == "FrozenCLIPEmbedder":
         print("converting clip")
         text_model = convert_ldm_clip_checkpoint(checkpoint)
+        del checkpoint
         print("converting clip done")
         tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
         print("safety checker")
