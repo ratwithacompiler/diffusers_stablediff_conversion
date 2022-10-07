@@ -642,6 +642,7 @@ if __name__ == "__main__":
 
     original_config = OmegaConf.load(args.original_config_file)
     checkpoint = torch.load(args.checkpoint_path)["state_dict"]
+    print("checkpoint loaded")
 
     num_train_timesteps = original_config.model.params.timesteps
     beta_start = original_config.model.params.linear_start
@@ -670,24 +671,36 @@ if __name__ == "__main__":
     # Convert the UNet2DConditionModel model.
     unet_config = create_unet_diffusers_config(original_config)
     converted_unet_checkpoint = convert_ldm_unet_checkpoint(checkpoint, unet_config)
+    print("unet converted")
 
     unet = UNet2DConditionModel(**unet_config)
     unet.load_state_dict(converted_unet_checkpoint)
+
+    print("unet loaded dict")
 
     # Convert the VAE model.
     vae_config = create_vae_diffusers_config(original_config)
     converted_vae_checkpoint = convert_ldm_vae_checkpoint(checkpoint, vae_config)
 
+    print("vae converted")
+
     vae = AutoencoderKL(**vae_config)
     vae.load_state_dict(converted_vae_checkpoint)
+
+    print("vae loaded")
 
     # Convert the text model.
     text_model_type = original_config.model.params.cond_stage_config.target.split(".")[-1]
     if text_model_type == "FrozenCLIPEmbedder":
+        print("converting clip")
         text_model = convert_ldm_clip_checkpoint(checkpoint)
+        print("converting clip done")
         tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
+        print("safety checker")
         safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
+        print("feature extractor")
         feature_extractor = AutoFeatureExtractor.from_pretrained("CompVis/stable-diffusion-safety-checker")
+        print("pipe")
         pipe = StableDiffusionPipeline(
             vae=vae,
             text_encoder=text_model,
@@ -703,4 +716,5 @@ if __name__ == "__main__":
         tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
         pipe = LDMTextToImagePipeline(vqvae=vae, bert=text_model, tokenizer=tokenizer, unet=unet, scheduler=scheduler)
 
+    print("saving")
     pipe.save_pretrained(args.dump_path)
