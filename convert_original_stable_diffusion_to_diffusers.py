@@ -392,6 +392,7 @@ def convert_ldm_unet_checkpoint(checkpoint, config):
                 output_block_list[layer_id].append(layer_name)
             else:
                 output_block_list[layer_id] = [layer_name]
+            output_block_list[layer_id] = sorted(output_block_list[layer_id])
 
         if len(output_block_list) > 1:
             resnets = [key for key in output_blocks[i] if f"output_blocks.{i}.0" in key]
@@ -405,8 +406,8 @@ def convert_ldm_unet_checkpoint(checkpoint, config):
                 paths, new_checkpoint, unet_state_dict, additional_replacements=[meta_path], config=config
             )
 
-            if ["conv.weight", "conv.bias"] in output_block_list.values():
-                index = list(output_block_list.values()).index(["conv.weight", "conv.bias"])
+            if ["conv.bias", "conv.weight"] in output_block_list.values():
+                index = list(output_block_list.values()).index(["conv.bias", "conv.weight"])
                 new_checkpoint[f"up_blocks.{block_id}.upsamplers.0.conv.weight"] = unet_state_dict[
                     f"output_blocks.{i}.{index}.conv.weight"
                 ]
